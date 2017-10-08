@@ -37,7 +37,7 @@ int col_draw_line;
 int col_draw;
 int align;
 int fx_phase;
-
+int fkeepclear;
 
 
 ///////////////////////////
@@ -96,6 +96,7 @@ void initialise()
 ///////////////////////////
 // Game Logic
 
+int nowhand;
 void handleMessage (int param1, int param2, int param3)
 {   
     log(param1);
@@ -103,7 +104,12 @@ void handleMessage (int param1, int param2, int param3)
     log(param3);
     log(myZyankenID);
     
-    if(myZyankenID == ROCK_ID)
+    nowhand = getLocalConfig(myZyankenID);
+    
+    log(nowhand);
+    
+    
+    if(nowhand == ROCK_ID)
     {
         if(param2 == PAPER_ID)
         {
@@ -118,7 +124,7 @@ void handleMessage (int param1, int param2, int param3)
             draw();
         }
     } 
-    else if(myZyankenID == SCISSORS_ID)
+    else if(nowhand == SCISSORS_ID)
     {
         if(param2 == PAPER_ID)
         {
@@ -181,9 +187,10 @@ int getJankenHand()
 bool finit;
 void CheckBlockConnection()
 {
-   if( finit == 1 ) return; 
+  // if( finit == 1 ) return; 
    
-   CurDeviceID = getBlockIDOnPort (2);
+   CurDeviceID = getBlockIDForIndex(1);
+   //CurDeviceID = getBlockIDOnPort(2);
    //log(CurDeviceID);
    //drawNumber(CurDeviceID, 0xffff0000, 2, 8);
    
@@ -208,6 +215,11 @@ void repaint()
     {
         //show currentHand(Goo Choki Par)
         drawCurrentHand();
+        if( finit == 0 ) {
+            if( fkeepclear == 1 ) {
+                clearDisplay();
+            }
+        }
     }
     else if(sceneState == RESULT_STATE)
     {
@@ -229,7 +241,7 @@ void drawResult()
 {
     clearDisplay();
     //Show Result
-    drawNumber(result,0xffff0000, 2, 8);
+    drawJudge(result );
 }
 
 void drawGoo(){
@@ -404,7 +416,9 @@ void drawJankenMark(int JankenId)
 void touchStart(int index, float touchX02, float touchY, float touchZ, float touchScale)
 {
     int currentHand = getJankenHand();
-    
+    int xcordinates = int(touchX02);
+    int ycordinates = int(touchY);   
+
     currentHand++;
     if(currentHand >= PAPER_ID + 1)
     {
@@ -414,12 +428,21 @@ void touchStart(int index, float touchX02, float touchY, float touchZ, float tou
     setLocalConfig(myZyankenID,currentHand);
 }
 
+int count;
 void handleButtonDown (int index)
 {
-    finit = false;
-    sceneState = PREPARE_STATE;
-    PrevDeviceID = 0;
+    if( finit == 1 ){
+        finit = false;
+        sceneState = PREPARE_STATE;
+        PrevDeviceID = 0;
+        fkeepclear = 0;
+    } 
+    else {
+        fkeepclear = 1;
+        if( count == 5 ){
+            finit = 1;
+            count = 0;
+        }
+        count++;
+    }
 }
-
-
-
