@@ -1,3 +1,4 @@
+
 /* TOKYO BLOCKS HACKATHON */
 
 /*
@@ -200,6 +201,32 @@ void CheckBlockConnection()
    }
 }
 
+void drawSet(){
+    // left
+    fillRect(0xFFFFFFFF, 0, 0, 1, 15);
+    // top 
+    fillRect(0xFFFFFFFF, 0, 0, 15, 1);
+    // right
+    fillRect(0xFFFFFFFF, 14, 0, 1, 14);
+    //bottom
+    fillRect(0xFFFFFFFF, 1, 14, 14, 1);
+    
+    //s 
+    fillRect(0xFFFFFFFF, 2, 4, 3, 1);
+    fillRect(0xFFFFFFFF, 2, 5, 1, 2);
+    fillRect(0xFFFFFFFF, 2, 7, 3, 1);
+    fillRect(0xFFFFFFFF, 4, 8, 1, 2);
+    fillRect(0xFFFFFFFF, 2, 10, 3, 1);
+    // e
+    fillRect(0xFFFFFFFF, 6, 4, 1, 7);
+    fillRect(0xFFFFFFFF, 7, 4, 2, 1);
+    fillRect(0xFFFFFFFF, 7, 7, 2, 1);
+    fillRect(0xFFFFFFFF, 7, 10, 2, 1);
+    // t
+    fillRect(0xFFFFFFFF, 10, 4, 3, 1);
+    fillRect(0xFFFFFFFF, 11, 5, 1, 6);
+}
+
 ///////////////////////////
 // Drawing
 
@@ -218,6 +245,7 @@ void repaint()
         if( finit == 0 ) {
             if( fkeepclear == 1 ) {
                 clearDisplay();
+                drawSet();
             }
         }
     }
