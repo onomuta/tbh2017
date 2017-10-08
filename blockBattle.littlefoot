@@ -160,11 +160,20 @@ void handleMessage (int param1, int param2, int param3)
 
 void win()
 {
+    if(result != 0)
+    {
+        sendMessageToHost(1,0,0);
+    }
+
     result = 0;
 }
 
 void lose()
 {
+    if(result != 1)
+    {
+        sendMessageToHost(2,0,0);
+    }
     result = 1;
 }
 
@@ -466,6 +475,7 @@ void handleButtonDown (int index)
     } 
     else {
         fkeepclear = 1;
+        sendMessageToHost(0,0,0);
         if( count == 5 ){
             finit = 1;
             count = 0;
