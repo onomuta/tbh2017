@@ -8,6 +8,9 @@ int ROCK_ID;
 int PAPER_ID; 
 int SCISSORS_ID;
 int myZyankenID;
+int myWinHistID;
+int myLoseHistID;
+int myPercentageID;
 int result;
 
 int sceneState;
@@ -80,7 +83,13 @@ void initialise()
 
     
     myZyankenID = 65;//BlocksProtocol::user1;
+    myWinHistID = 67;
+    myLoseHistID = 68;
+    myPercentageID = 69;
     setLocalConfigActiveState(myZyankenID,true,true);
+    setLocalConfigActiveState(myWinHistID,true,true);
+    setLocalConfigActiveState(myLoseHistID,true,true);
+    setLocalConfigActiveState(myPercentageID,true,true);
     
     int current = getJankenHand();
     
@@ -160,20 +169,11 @@ void handleMessage (int param1, int param2, int param3)
 
 void win()
 {
-    if(result != 0)
-    {
-        sendMessageToHost(1,0,0);
-    }
-
     result = 0;
 }
 
 void lose()
 {
-    if(result != 1)
-    {
-        sendMessageToHost(2,0,0);
-    }
     result = 1;
 }
 
@@ -196,7 +196,7 @@ int getJankenHand()
 bool finit;
 void CheckBlockConnection()
 {
-  if( finit == 1 ) return; 
+  // if( finit == 1 ) return; 
    
    CurDeviceID = getBlockIDForIndex(1);
    //CurDeviceID = getBlockIDOnPort(2);
@@ -260,8 +260,27 @@ void repaint()
     else if(sceneState == RESULT_STATE)
     {
         drawResult();
+
     }
-    
+            if(getBlockTypeForID(getBlockIDForIndex(1)) > 1 ){
+        clearDisplay();
+        if( result == 0 ){
+            int k = getLocalConfig(myWinHistID) + 1;
+            setLocalConfig(myWinHistID, k );
+        }
+        if( result == 1 ){
+            int k = getLocalConfig(myLoseHistID) + 1;
+            setLocalConfig(myLoseHistID, k );
+        }
+        result = 255;
+        //sceneState = PREPARE_STATE;
+        //getLocalConfig(myLoseHistID);
+        //getLocalConfig(myPercentageID);
+        fillRect(0xffffffff, 0, 0, 15, 15);
+        fillRect(0xff000000, 1, 1, 13, 13);
+        drawNumber(getLocalConfig(myWinHistID),0xffff0000, 5, 2);
+        drawNumber(getLocalConfig(myLoseHistID),0xff0000ff, 5, 8);
+    }
 }
 
 void drawCurrentHand()
@@ -472,10 +491,11 @@ void handleButtonDown (int index)
         sceneState = PREPARE_STATE;
         PrevDeviceID = 0;
         fkeepclear = 0;
+
+        result = 255;
     } 
     else {
         fkeepclear = 1;
-        sendMessageToHost(0,0,0);
         if( count == 5 ){
             finit = 1;
             count = 0;
@@ -483,3 +503,4 @@ void handleButtonDown (int index)
         count++;
     }
 }
+
