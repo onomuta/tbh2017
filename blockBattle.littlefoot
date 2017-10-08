@@ -1,3 +1,425 @@
 /* TOKYO BLOCKS HACKATHON */
 
-testestes
+/*
+<metadata description="BLOCKSvaders - Touch to move player, lift to fire" target="Lightpad" tags="Game" >
+</metadata>
+*/
+int ROCK_ID;
+int PAPER_ID; 
+int SCISSORS_ID;
+int myZyankenID;
+int result;
+
+int sceneState;
+int PREPARE_STATE;
+int CONNECT_STATE;
+int RESULT_STATE;
+
+
+int i;
+int CurDeviceID;
+int PrevDeviceID;
+bool fStartJanken;
+
+//TJ
+int col_goo;
+int col_choki;
+int col_paa;
+int col_goo_line;
+int col_choki_line;
+int col_paa_line;
+int col_fx_line;
+int col_win_line;
+int col_win;
+int col_lose_line;
+int col_lose;
+int col_draw_line;
+int col_draw;
+int align;
+int fx_phase;
+
+
+
+///////////////////////////
+// Initialisation
+
+void initialise()
+{
+    
+    //zyanken-define
+    ROCK_ID     = 0;
+    SCISSORS_ID = 1;
+    PAPER_ID    = 2;
+    
+    //myZyankenID = ROCK_ID;
+    
+    PREPARE_STATE = 0;
+    CONNECT_STATE = 1;
+    RESULT_STATE  = 2;
+    sceneState    = PREPARE_STATE;
+    result        = 8;
+    PrevDeviceID  = 0;
+    CurDeviceID   = 0;
+   
+    col_goo_line    = 0xFF00AAFF;
+    col_goo         = 0xFF00CCEE;
+    col_choki       = 0xFFFF8400;
+    col_choki_line  = 0xFFFF0000;
+    col_paa         = 0xFF22CC44;
+    col_paa_line    = 0xFF00FF00;
+    col_fx_line     = 0xFFFFFF00;
+    col_win         = 0xFFFF8400;
+    col_win_line    = 0xFFFF0000;
+    col_lose        = 0xFFDDDDDD;
+    col_lose_line   = 0xFF999999;
+    col_draw        = 0xFFEE22FF;
+    col_draw_line   = 0xFFAA00FF;
+
+    align = 0;
+    fx_phase = 0;
+
+    
+    myZyankenID = 65;//BlocksProtocol::user1;
+    setLocalConfigActiveState(myZyankenID,true,true);
+    
+    int current = getJankenHand();
+    
+    if(current < 0 || current > 2)
+    {
+        //init if err
+        setLocalConfig(myZyankenID,0);
+    }
+    
+}
+
+
+///////////////////////////
+// Game Logic
+
+void handleMessage (int param1, int param2, int param3)
+{   
+    log(param1);
+    log(param2);
+    log(param3);
+    log(myZyankenID);
+    
+    if(myZyankenID == ROCK_ID)
+    {
+        if(param2 == PAPER_ID)
+        {
+            lose();
+        }
+        else if(param2 == SCISSORS_ID)
+        {
+            win();
+        }
+        else
+        {
+            draw();
+        }
+    } 
+    else if(myZyankenID == SCISSORS_ID)
+    {
+        if(param2 == PAPER_ID)
+        {
+            win();
+        }
+        else if(param2 == SCISSORS_ID)
+        {
+            draw();
+        }
+        else
+        {
+            lose();
+        }
+    }
+    else //if(myZyankenID = PAPER_ID)
+    {
+        if(param2 == PAPER_ID)
+        {
+            draw();
+        }
+        else if(param2 == SCISSORS_ID)
+        {
+            lose();
+        }
+        else
+        {
+            win();
+        }
+    }
+    
+    sceneState = RESULT_STATE;
+}
+
+void win()
+{
+    result = 0;
+}
+
+void lose()
+{
+    result = 1;
+}
+
+void draw()
+{
+    result = 2;
+}
+
+void StartJanken()
+{
+    //log(CurDeviceID);
+    sendMessageToBlock( CurDeviceID, CurDeviceID ,getJankenHand(), 0 );
+}
+
+int getJankenHand()
+{
+    return getLocalConfig(myZyankenID);
+}
+
+bool finit;
+void CheckBlockConnection()
+{
+   if( finit == 1 ) return; 
+   
+   CurDeviceID = getBlockIDOnPort (2);
+   //log(CurDeviceID);
+   //drawNumber(CurDeviceID, 0xffff0000, 2, 8);
+   
+   if(CurDeviceID){ 
+      StartJanken();
+      finit = 1;
+   }
+}
+
+///////////////////////////
+// Drawing
+
+void repaint()
+{
+    fillRect(0xff00ff00, 0, 0, 15, 15);
+    fillRect(0xff000000, 1, 1, 13, 13);
+    
+    //check Always
+    CheckBlockConnection();
+   
+    if(sceneState == PREPARE_STATE)
+    {
+        //show currentHand(Goo Choki Par)
+        drawCurrentHand();
+    }
+    else if(sceneState == RESULT_STATE)
+    {
+        drawResult();
+    }
+    
+}
+
+void drawCurrentHand()
+{
+      
+    int currentHand = getJankenHand();
+    
+    //drawNumber(currentHand,0xffff0000, 2, 2);
+    drawJankenMark(currentHand);
+}
+
+void drawResult()
+{
+    clearDisplay();
+    //Show Result
+    drawNumber(result,0xffff0000, 2, 8);
+}
+
+void drawGoo(){
+     // draw frame
+     fillRect (col_goo_line, 0, 0, 15, 1);
+     fillRect (col_goo_line, 0, 0, 1, 15);
+     fillRect (col_goo_line, 14, 0, 1, 15);
+     fillRect (col_goo_line, 0, 14, 15, 1);
+     // draw main rect 
+     fillRect (col_goo, 4+align, 3+align, 5, 1); // hitosashi yubi
+     fillRect (col_goo, 3+align, 4+align, 9, 1);
+     fillRect (col_goo, 3+align, 5+align, 10, 2);
+     fillRect (col_goo, 2+align, 7+align, 11, 4);
+     fillRect (col_goo, 3+align, 11+align, 10, 1);
+     fillRect (col_goo, 4+align, 12+align, 7, 1);
+    // draw gap 
+    fillRect (0, 4+align, 7+align, 1, 2);
+    fillRect (0, 5+align, 8+align, 1, 2);
+    fillRect (0, 6+align, 9+align, 5, 1);
+    fillRect (0, 8+align, 11+align, 1, 2);
+    fillRect (0, 7+align, 8+align, 1, 1);
+    fillRect (0, 6+align, 9+align, 1, 1);
+
+
+}
+
+void drawChoki(){
+    // draw frame
+     fillRect (col_choki_line, 0, 0, 15, 1);
+     fillRect (col_choki_line, 0, 0, 1, 15);
+     fillRect (col_choki_line, 14, 0, 1, 15);
+     fillRect (col_choki_line, 0, 14, 15, 1);
+     
+     // draw main rect 
+    fillRect (col_choki, 3+align, 2+align, 2, 4);
+    fillRect (col_choki, 6+align, 2+align, 2, 4);
+    fillRect (col_choki, 3+align, 6+align, 7, 1);
+    fillRect (col_choki, 3+align, 7+align, 9, 5);
+
+    // draw gap
+    fillRect (0, 4+align, 9+align, 3, 1);
+    fillRect (0, 6+align, 10+align, 1, 2);
+    
+
+}
+
+
+void drawPaa(){
+
+    // draw grame
+     fillRect (col_paa_line, 0, 0, 15, 1);
+     fillRect (col_paa_line, 0, 0, 1, 15);
+     fillRect (col_paa_line, 14, 0, 1, 15);
+     fillRect (col_paa_line, 0, 14, 15, 1);
+    // draw main rect
+    fillRect (col_paa, 4+align, 2+align, 6, 1);
+    fillRect (col_paa, 4+align, 3+align, 7, 1);
+    fillRect (col_paa, 4+align, 4+align, 8, 8);
+    fillRect (col_paa, 2+align, 8+align, 2, 2);
+    fillRect (col_paa, 4+align, 12+align, 7, 1);
+
+    // draw gap
+    fillRect(0, 5+align, 8+align, 2, 1);
+    fillRect(0, 7+align, 9+align, 1, 3); 
+    fillRect(0, 6+align, 2+align, 1, 4);
+}
+
+void drawWin()
+{
+    // draw frame
+    fillRect(col_win_line, 0, 0, 15 ,3);
+    fillRect(col_win_line, 0, 12, 15, 3);
+    
+    // draw main figure
+    // w
+    fillRect(col_win, 1, 4, 1, 4);
+    fillRect(col_win, 3, 4, 1, 4);
+    fillRect(col_win, 5, 4, 1, 4);
+    fillRect(col_win, 1, 8, 5, 1);
+    fillRect(col_win, 2, 9, 1, 2);
+    fillRect(col_win, 4, 9, 1, 2);
+    // i
+    fillRect(col_win, 7, 4, 1, 7);
+    // n
+    fillRect(col_win, 9, 4, 1, 7);
+    fillRect(col_win, 10, 5, 1, 3);
+    fillRect(col_win, 11, 7, 1, 2);
+    fillRect(col_win, 12, 8, 1, 2);
+    fillRect(col_win, 13, 4, 1, 7);
+
+}
+
+void drawLose(){
+    // draw frame
+    fillRect(col_lose_line, 0, 0, 15 ,3);
+    fillRect(col_lose_line, 0, 12, 15, 3);
+    // l
+    fillRect(col_lose, 1, 4, 1, 7);
+    fillRect(col_lose, 2, 9, 1, 2);
+    // o
+    fillRect(col_lose, 4, 4, 1, 7);
+    fillRect(col_lose, 5, 4, 1, 1);
+    fillRect(col_lose, 5, 10, 1, 1);
+    fillRect(col_lose, 6, 4, 1, 7);
+    // s
+    fillRect(col_lose, 8, 4, 3, 1);
+    fillRect(col_lose, 8, 5, 1, 2);
+    fillRect(col_lose, 8, 7, 3, 1);
+    fillRect(col_lose, 10, 8, 1, 2);
+    fillRect(col_lose, 8, 10, 3, 1);
+    // e
+    fillRect(col_lose, 12, 4, 1, 7);
+    fillRect(col_lose, 13, 4, 1, 1);
+    fillRect(col_lose, 13, 7, 1, 1);
+    fillRect(col_lose, 13, 10, 1, 1);
+
+}
+
+void drawDraw()
+{
+    // draw frame
+    fillRect(col_draw_line, 0, 0, 15 ,3);
+    fillRect(col_draw_line, 0, 12, 15, 3);
+    // d
+    fillRect(col_draw, 0, 4, 1, 7);
+    fillRect(col_draw, 1, 4, 2, 1);
+    fillRect(col_draw, 1, 10, 2, 1);
+    fillRect(col_draw, 3, 5, 1, 5);
+    // r
+    fillRect(col_draw, 5, 4, 1, 7);
+    fillRect(col_draw, 6, 4, 2, 1);
+    fillRect(col_draw, 6, 7, 2, 1);
+    fillRect(col_draw, 8, 5, 1, 3);
+    fillRect(col_draw, 7 ,8, 1, 2);
+    fillRect(col_draw, 8, 10, 1, 1);
+
+    // w
+    fillRect(col_draw, 10, 4, 1, 5);
+    fillRect(col_draw, 11, 8, 1, 3);
+    fillRect(col_draw, 12, 5, 1, 4);
+    fillRect(col_draw, 13, 8, 1, 3);
+    fillRect(col_draw, 14, 4, 1, 5);
+
+
+}
+
+void drawJudge(int judgeId){
+    if(judgeId == 0){
+        drawWin();
+    }else if(judgeId == 1){
+        drawLose();
+    }else{
+        drawDraw();
+    }
+}
+
+
+void drawJankenMark(int JankenId)
+{
+    if(JankenId == 0){
+        drawGoo();
+    }else if(JankenId == 1){
+        drawChoki();
+    }else{
+        drawPaa();
+    }   
+}
+
+
+///////////////////////////
+// Input detection
+void touchStart(int index, float touchX02, float touchY, float touchZ, float touchScale)
+{
+    int currentHand = getJankenHand();
+    
+    currentHand++;
+    if(currentHand >= PAPER_ID + 1)
+    {
+        currentHand = 0;
+    }
+    
+    setLocalConfig(myZyankenID,currentHand);
+}
+
+void handleButtonDown (int index)
+{
+    finit = false;
+    sceneState = PREPARE_STATE;
+    PrevDeviceID = 0;
+}
+
+
+
