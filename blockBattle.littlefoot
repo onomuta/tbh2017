@@ -42,6 +42,13 @@ int align;
 int fx_phase;
 int fkeepclear;
 
+int anim_cnt;
+int anim_phase;
+int anim_exec;
+int col_fx_vert;
+
+float pi;
+
 
 ///////////////////////////
 // Initialisation
@@ -81,6 +88,14 @@ void initialise()
     align = 0;
     fx_phase = 0;
 
+    // define animation
+    
+    anim_cnt = 0;
+    anim_phase = 0;
+    anim_exec = 0;
+    col_fx_vert = 0xFFFFFF00;
+    pi = 3.141592;
+    
     
     myZyankenID = 65;//BlocksProtocol::user1;
     myWinHistID = 67;
@@ -210,14 +225,19 @@ void CheckBlockConnection()
 }
 
 void drawSet(){
+    
+    
+
+    
+    
     // left
-    fillRect(0xFFFFFFFF, 0, 0, 1, 15);
+    fillRect(0xFF555555, 0, 0, 1, 15);
     // top 
-    fillRect(0xFFFFFFFF, 0, 0, 15, 1);
+    fillRect(0xFF555555, 0, 0, 15, 1);
     // right
-    fillRect(0xFFFFFFFF, 14, 0, 1, 14);
+    fillRect(0xFF555555, 14, 0, 1, 14);
     //bottom
-    fillRect(0xFFFFFFFF, 1, 14, 14, 1);
+    fillRect(0xFF555555, 1, 14, 14, 1);
     
     //s 
     fillRect(0xFFFFFFFF, 2, 4, 3, 1);
@@ -233,7 +253,63 @@ void drawSet(){
     // t
     fillRect(0xFFFFFFFF, 10, 4, 3, 1);
     fillRect(0xFFFFFFFF, 11, 5, 1, 6);
+    
+    
+    
+    anim_cnt = 0;
+    anim_phase++;
+    anim_exec = 1;
+    if(anim_phase >= 100){
+        anim_phase = 0;
+    }
+    if(anim_exec){
+        // do shori
+        anim_exec = 0;
+        drawFxVertTurn(anim_phase);
+    }
 }
+
+
+
+float my_sin(float x){
+    
+    int nMAX = 10;
+    x -= (int(x / (2 * pi)) * 2 * pi);
+  
+    float sum = x;// 合計値
+    float t = x;
+ 
+    for(int n=1;n<=nMAX;n++){
+        t *= - (x * x) / ((2 * n + 1) * (2 * n));
+        sum += t;
+    }
+
+    sum = (sum + 1)/2;    
+    return sum;
+}
+
+
+int getAlphaWave(){
+    return int(my_sin(float(anim_phase)) * 0xFF);
+}
+
+int convAlphaColor(int color){
+    int mask = 0xFFFFAAFF + getAlphaWave();
+    return mask;
+}
+
+
+void drawFxVertTurn(int fx_phase){
+    int phase = fx_phase % 15;
+    // clearDisplay();
+    int col = convAlphaColor(col_fx_vert);
+    fillRect(col, phase, 0, 3, 1);
+    fillRect(col, 14, phase, 1, 3);
+    fillRect(col, 14 - phase, 14 , 3, 1);
+    fillRect(col, 0, 14 - phase, 1, 3);
+}
+
+
 
 ///////////////////////////
 // Drawing
@@ -503,4 +579,3 @@ void handleButtonDown (int index)
         count++;
     }
 }
-
