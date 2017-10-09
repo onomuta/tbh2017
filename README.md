@@ -1,6 +1,6 @@
 # Block Battle
 
-[TOKYO BLOCKS HACKATHON](https://tokyoblockshackathon.devpost.com/)
+[TOKYO BLOCKS HACKATHON](https://devpost.com/software/nervousghost_tbh2017)
 
 
 2017.10.7 - 2017.10.8
