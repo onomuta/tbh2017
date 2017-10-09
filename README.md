@@ -3,7 +3,7 @@
 [TOKYO BLOCKS HACKATHON](https://tokyoblockshackathon.devpost.com/)
 
 
-10.7 - 10.8
+2017.10.7 - 2017.10.8
 
 
 
