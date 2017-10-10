@@ -1,5 +1,3 @@
-# Block Battle
-
 [TOKYO BLOCKS HACKATHON](https://tokyoblockshackathon.devpost.com/)
 
 2017.10.7 - 2017.10.8
