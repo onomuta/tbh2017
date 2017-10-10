@@ -1,13 +1,16 @@
 /* TOKYO BLOCKS HACKATHON */
 
 /*
-<metadata description="BLOCKSvaders - Touch to move player, lift to fire" target="Lightpad" tags="Game" >
+<metadata description="blockBattle - Touch to change hand, Push mode-button to select, connect to battle!!!" target="Lightpad" tags="Game" >
 </metadata>
 */
 int ROCK_ID;
 int PAPER_ID; 
 int SCISSORS_ID;
 int myZyankenID;
+int myWinHistID;
+int myLoseHistID;
+int myPercentageID;
 int result;
 
 int sceneState;
@@ -37,7 +40,14 @@ int col_draw_line;
 int col_draw;
 int align;
 int fx_phase;
+int fkeepclear;
 
+int anim_cnt;
+int anim_phase;
+int anim_exec;
+int col_fx_vert;
+
+float pi;
 
 
 ///////////////////////////
@@ -78,9 +88,23 @@ void initialise()
     align = 0;
     fx_phase = 0;
 
+    // define animation
+    
+    anim_cnt = 0;
+    anim_phase = 0;
+    anim_exec = 0;
+    col_fx_vert = 0xFFFFFF00;
+    pi = 3.141592;
+    
     
     myZyankenID = 65;//BlocksProtocol::user1;
+    myWinHistID = 67;
+    myLoseHistID = 68;
+    myPercentageID = 69;
     setLocalConfigActiveState(myZyankenID,true,true);
+    setLocalConfigActiveState(myWinHistID,true,true);
+    setLocalConfigActiveState(myLoseHistID,true,true);
+    setLocalConfigActiveState(myPercentageID,true,true);
     
     int current = getJankenHand();
     
@@ -96,6 +120,7 @@ void initialise()
 ///////////////////////////
 // Game Logic
 
+int nowhand;
 void handleMessage (int param1, int param2, int param3)
 {   
     log(param1);
@@ -103,7 +128,12 @@ void handleMessage (int param1, int param2, int param3)
     log(param3);
     log(myZyankenID);
     
-    if(myZyankenID == ROCK_ID)
+    nowhand = getLocalConfig(myZyankenID);
+    
+    log(nowhand);
+    
+    
+    if(nowhand == ROCK_ID)
     {
         if(param2 == PAPER_ID)
         {
@@ -118,7 +148,7 @@ void handleMessage (int param1, int param2, int param3)
             draw();
         }
     } 
-    else if(myZyankenID == SCISSORS_ID)
+    else if(nowhand == SCISSORS_ID)
     {
         if(param2 == PAPER_ID)
         {
@@ -181,9 +211,10 @@ int getJankenHand()
 bool finit;
 void CheckBlockConnection()
 {
-   if( finit == 1 ) return; 
+  // if( finit == 1 ) return; 
    
-   CurDeviceID = getBlockIDOnPort (2);
+   CurDeviceID = getBlockIDForIndex(1);
+   //CurDeviceID = getBlockIDOnPort(2);
    //log(CurDeviceID);
    //drawNumber(CurDeviceID, 0xffff0000, 2, 8);
    
@@ -192,6 +223,93 @@ void CheckBlockConnection()
       finit = 1;
    }
 }
+
+void drawSet(){
+    
+    
+
+    
+    
+    // left
+    fillRect(0xFF555555, 0, 0, 1, 15);
+    // top 
+    fillRect(0xFF555555, 0, 0, 15, 1);
+    // right
+    fillRect(0xFF555555, 14, 0, 1, 14);
+    //bottom
+    fillRect(0xFF555555, 1, 14, 14, 1);
+    
+    //s 
+    fillRect(0xFFFFFFFF, 2, 4, 3, 1);
+    fillRect(0xFFFFFFFF, 2, 5, 1, 2);
+    fillRect(0xFFFFFFFF, 2, 7, 3, 1);
+    fillRect(0xFFFFFFFF, 4, 8, 1, 2);
+    fillRect(0xFFFFFFFF, 2, 10, 3, 1);
+    // e
+    fillRect(0xFFFFFFFF, 6, 4, 1, 7);
+    fillRect(0xFFFFFFFF, 7, 4, 2, 1);
+    fillRect(0xFFFFFFFF, 7, 7, 2, 1);
+    fillRect(0xFFFFFFFF, 7, 10, 2, 1);
+    // t
+    fillRect(0xFFFFFFFF, 10, 4, 3, 1);
+    fillRect(0xFFFFFFFF, 11, 5, 1, 6);
+    
+    
+    
+    anim_cnt = 0;
+    anim_phase++;
+    anim_exec = 1;
+    if(anim_phase >= 100){
+        anim_phase = 0;
+    }
+    if(anim_exec){
+        // do shori
+        anim_exec = 0;
+        drawFxVertTurn(anim_phase);
+    }
+}
+
+
+
+float my_sin(float x){
+    
+    int nMAX = 10;
+    x -= (int(x / (2 * pi)) * 2 * pi);
+  
+    float sum = x;// 合計値
+    float t = x;
+ 
+    for(int n=1;n<=nMAX;n++){
+        t *= - (x * x) / ((2 * n + 1) * (2 * n));
+        sum += t;
+    }
+
+    sum = (sum + 1)/2;    
+    return sum;
+}
+
+
+int getAlphaWave(){
+    return int(my_sin(float(anim_phase)) * 0xFF);
+}
+
+int convAlphaColor(int color){
+    int mask = 0xFFFFAAFF + getAlphaWave();
+    return mask;
+}
+
+
+void drawFxVertTurn(int fx_phase){
+    int phase = fx_phase % 15;
+    // clearDisplay();
+    int col = convAlphaColor(col_fx_vert);
+    fillRect(col, phase, 0, 3, 1);
+    fillRect(col, 14, phase, 1, 3);
+    fillRect(col, 14 - phase, 14 , 3, 1);
+    fillRect(col, 0, 14 - phase, 1, 3);
+}
+
+
 
 ///////////////////////////
 // Drawing
@@ -208,12 +326,37 @@ void repaint()
     {
         //show currentHand(Goo Choki Par)
         drawCurrentHand();
+        if( finit == 0 ) {
+            if( fkeepclear == 1 ) {
+                clearDisplay();
+                drawSet();
+            }
+        }
     }
     else if(sceneState == RESULT_STATE)
     {
         drawResult();
+
     }
-    
+            if(getBlockTypeForID(getBlockIDForIndex(1)) > 1 ){
+        clearDisplay();
+        if( result == 0 ){
+            int k = getLocalConfig(myWinHistID) + 1;
+            setLocalConfig(myWinHistID, k );
+        }
+        if( result == 1 ){
+            int k = getLocalConfig(myLoseHistID) + 1;
+            setLocalConfig(myLoseHistID, k );
+        }
+        result = 255;
+        //sceneState = PREPARE_STATE;
+        //getLocalConfig(myLoseHistID);
+        //getLocalConfig(myPercentageID);
+        fillRect(0xffffffff, 0, 0, 15, 15);
+        fillRect(0xff000000, 1, 1, 13, 13);
+        drawNumber(getLocalConfig(myWinHistID),0xffff0000, 5, 2);
+        drawNumber(getLocalConfig(myLoseHistID),0xff0000ff, 5, 8);
+    }
 }
 
 void drawCurrentHand()
@@ -229,7 +372,7 @@ void drawResult()
 {
     clearDisplay();
     //Show Result
-    drawNumber(result,0xffff0000, 2, 8);
+    drawJudge(result );
 }
 
 void drawGoo(){
@@ -404,7 +547,9 @@ void drawJankenMark(int JankenId)
 void touchStart(int index, float touchX02, float touchY, float touchZ, float touchScale)
 {
     int currentHand = getJankenHand();
-    
+    int xcordinates = int(touchX02);
+    int ycordinates = int(touchY);   
+
     currentHand++;
     if(currentHand >= PAPER_ID + 1)
     {
@@ -414,12 +559,23 @@ void touchStart(int index, float touchX02, float touchY, float touchZ, float tou
     setLocalConfig(myZyankenID,currentHand);
 }
 
+int count;
 void handleButtonDown (int index)
 {
-    finit = false;
-    sceneState = PREPARE_STATE;
-    PrevDeviceID = 0;
+    if( finit == 1 ){
+        finit = false;
+        sceneState = PREPARE_STATE;
+        PrevDeviceID = 0;
+        fkeepclear = 0;
+
+        result = 255;
+    } 
+    else {
+        fkeepclear = 1;
+        if( count == 5 ){
+            finit = 1;
+            count = 0;
+        }
+        count++;
+    }
 }
-
-
-
