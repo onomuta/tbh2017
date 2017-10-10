@@ -1,7 +1,7 @@
 /* TOKYO BLOCKS HACKATHON */
 
 /*
-<metadata description="BLOCKSvaders - Touch to move player, lift to fire" target="Lightpad" tags="Game" >
+<metadata description="blockBattle - Touch to change hand, Push mode-button to select, connect to battle!!!" target="Lightpad" tags="Game" >
 </metadata>
 */
 int ROCK_ID;
